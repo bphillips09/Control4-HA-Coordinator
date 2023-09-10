@@ -1,0 +1,118 @@
+<devicedata>
+  <copyright>BP</copyright>
+	<creator>BP</creator>
+	<manufacturer>BP</manufacturer>
+	<name>HA Coordinator</name>
+	<model>HA Coordinator</model>
+	<created>09/10/2023 12:00</created>
+	<modified>09/10/2023 12:00</modified>
+  <version>10</version>
+  <control>lua_gen</control>
+  <auto_update>true</auto_update>
+  <force_auto_update>false</force_auto_update>
+  <minimum_auto_update_version>1</minimum_auto_update_version>
+  <controlmethod>ip</controlmethod>
+  <combo>true</combo>
+  <proxy>HA WS</proxy>
+  <driver>DriverWorks</driver>
+  <minimum_os_version>3.2.0</minimum_os_version>
+  <capabilities />
+  <connections>
+    <connection>
+      <id>6001</id>
+      <facing>6</facing>
+      <connectionname>HA Coordinator</connectionname>
+      <type>4</type>
+      <consumer>True</consumer>
+      <audiosource>False</audiosource>
+      <videosource>False</videosource>
+      <linelevel>True</linelevel>
+    </connection>
+    <connection>
+      <id>1</id>
+      <facing>2</facing>
+      <type>1</type>
+      <connectionname>Device Link</connectionname>
+      <consumer>False</consumer>
+      <classes>
+        <class>
+          <classname>HA_DEVICE</classname>
+          <autobind>True</autobind>
+        </class>
+      </classes>
+    </connection>
+  </connections>
+  <conditionals />
+  <events />
+  <config>
+    <script file="driver.lua" jit="1"></script>
+    <actions>
+      <action>
+        <name>Connect to HA</name>
+        <command>WS_CONNECT</command>
+      </action>
+      <action>
+        <name>Disconnect from HA</name>
+        <command>WS_DISCONNECT</command>
+      </action>
+    </actions>
+    <commands></commands>
+    <properties>
+      <property>
+        <name>Home Assistant URL</name>
+        <type>STRING</type>
+        <readonly>false</readonly>
+        <default>192.168.1.200:8123</default>
+      </property>
+      <property>
+        <name>Long Lived Access Token</name>
+        <type>STRING</type>
+        <readonly>false</readonly>
+        <default></default>
+      </property>
+      <property>
+        <name>HA Version</name>
+        <type>STRING</type>
+        <readonly>true</readonly>
+        <default></default>
+      </property>
+      <property>
+        <name>Status</name>
+        <type>STRING</type>
+        <readonly>true</readonly>
+        <default>Disconnected</default>
+      </property>
+      <property>
+        <name>Log Level</name>
+        <type>LIST</type>
+        <readonly>false</readonly>
+        <default>2 - Warning</default>
+        <items>
+          <item>0 - Alert</item>
+          <item>1 - Error</item>
+          <item>2 - Warning</item>
+          <item>3 - Info</item>
+          <item>4 - Trace</item>
+          <item>5 - Debug</item>
+        </items>
+      </property>
+      <property>
+        <name>Log Mode</name>
+        <type>LIST</type>
+        <readonly>false</readonly>
+        <default>Off</default>
+        <items>
+          <item>Off</item>
+          <item>Print</item>
+          <item>Log</item>
+          <item>Print and Log</item>
+        </items>
+      </property>
+    </properties>
+  </config>
+  <composer_categories>
+    <category>Lights</category>
+    <category>Comfort</category>
+    <category>Blinds/Shades</category>
+  </composer_categories>
+</devicedata>
