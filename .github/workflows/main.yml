@@ -9,7 +9,7 @@ jobs:
         uses: snap-one/drivers-driverpackager@v1
         with:
           # Directory (relative to the root of your Git repo) that contains the .c4zproj to build
-          projectDir: ''
+          projectDir: '/'
           # Filename for the c4z project to build
           c4zproj: ''
           # Directory (relative to projectDir) to output the built c4z file to
@@ -20,7 +20,7 @@ jobs:
           version: ''
           # Should the driver modified date XML field be updated.
           # Optional
-          updateModified: true
+          updateModified: 'true'
           # Should the driver enable Lua Command window and DevLog common library function
           # Optional
-          allowexecute: false
+          allowexecute: 'false'
