@@ -14,7 +14,7 @@ jobs:
           c4zproj: ''
           # Directory (relative to projectDir) to output the built c4z file to
           # Defaults to the parent directory ('./../')
-          outputDir: ''
+          outputDir: 'Releases'
           # Version to which the driver will be updated.
           # Optional
           version: ''
