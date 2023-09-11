@@ -1,0 +1,26 @@
+name: Build C4Z
+on: push
+jobs:
+  build:
+    name: Build Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Packager
+        uses: snap-one/drivers-driverpackager@v1
+        with:
+          # Directory (relative to the root of your Git repo) that contains the .c4zproj to build
+          projectDir: ''
+          # Filename for the c4z project to build
+          c4zproj: ''
+          # Directory (relative to projectDir) to output the built c4z file to
+          # Defaults to the parent directory ('./../')
+          outputDir: ''
+          # Version to which the driver will be updated.
+          # Optional
+          version: ''
+          # Should the driver modified date XML field be updated.
+          # Optional
+          updateModified: true
+          # Should the driver enable Lua Command window and DevLog common library function
+          # Optional
+          allowexecute: false
