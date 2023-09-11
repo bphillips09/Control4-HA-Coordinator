@@ -83,29 +83,13 @@
         <default>Disconnected</default>
       </property>
       <property>
-        <name>Log Level</name>
-        <type>LIST</type>
-        <readonly>false</readonly>
-        <default>2 - Warning</default>
-        <items>
-          <item>0 - Alert</item>
-          <item>1 - Error</item>
-          <item>2 - Warning</item>
-          <item>3 - Info</item>
-          <item>4 - Trace</item>
-          <item>5 - Debug</item>
-        </items>
-      </property>
-      <property>
-        <name>Log Mode</name>
+        <name>Debug Print</name>
         <type>LIST</type>
         <readonly>false</readonly>
         <default>Off</default>
         <items>
           <item>Off</item>
-          <item>Print</item>
-          <item>Log</item>
-          <item>Print and Log</item>
+          <item>On</item>
         </items>
       </property>
     </properties>
@@ -114,5 +98,8 @@
     <category>Lights</category>
     <category>Comfort</category>
     <category>Blinds/Shades</category>
+    <category>Locks</category>
+    <category>Sensors</category>
+    <category>Others</category>
   </composer_categories>
 </devicedata>

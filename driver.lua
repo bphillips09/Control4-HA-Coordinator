@@ -203,13 +203,28 @@ function SocketSendMessage(message)
 		return
 	end
 
-	print("SEND: " .. message)
+	if DEBUGPRINT then
+		print("--SEND:-- " .. message)
+	end
 
 	Socket:Send(message)
 end
 
 function OPC.Home_Assistant_URL(value)
 	EC.WS_CONNECT()
+end
+
+function OPC.Debug_Print (value)
+	CancelTimer ('DEBUGPRINT')
+	DEBUGPRINT = (value == 'On')
+
+	if (DEBUGPRINT) then
+		local _timer = function (timer)
+			C4:UpdateProperty ('Debug Print', 'Off')
+			OnPropertyChanged ('Debug Print')
+		end
+		SetTimer ('DEBUGPRINT', 36000000, _timer)
+	end
 end
 
 function EC.WS_CONNECT()
@@ -270,7 +285,10 @@ function RFP.HA_GET_STATE(idBinding, strCommand, tParams)
 end
 
 function ReceieveMessage(socket, data)
-	--print("--RECV:-- " .. tostring(data))
+	if DEBUGPRINT then
+		print("--RECV:-- " .. tostring(data))
+	end
+
 	local jsonData = JSON:decode(data)
 	local tParams = {}
 
