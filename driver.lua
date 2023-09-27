@@ -214,21 +214,28 @@ function OPC.Home_Assistant_URL(value)
 	EC.WS_CONNECT()
 end
 
-function OPC.Debug_Print (value)
-	CancelTimer ('DEBUGPRINT')
+function OPC.Long_Lived_Access_Token(value)
+	EC.WS_CONNECT()
+end
+
+function OPC.Debug_Print(value)
+	CancelTimer('DEBUGPRINT')
 	DEBUGPRINT = (value == 'On')
 
 	if (DEBUGPRINT) then
-		local _timer = function (timer)
-			C4:UpdateProperty ('Debug Print', 'Off')
-			OnPropertyChanged ('Debug Print')
+		local _timer = function(timer)
+			C4:UpdateProperty('Debug Print', 'Off')
+			OnPropertyChanged('Debug Print')
 		end
-		SetTimer ('DEBUGPRINT', 36000000, _timer)
+		SetTimer('DEBUGPRINT', 36000000, _timer)
 	end
 end
 
 function EC.WS_CONNECT()
 	if Connected == true then
+		Disconnect()
+		SetTimer("WaitToShowStatus", 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
+		SetTimer("WaitForConnect", 10 * ONE_SECOND, EC.WS_CONNECT)
 		return
 	end
 
@@ -237,12 +244,16 @@ function EC.WS_CONNECT()
 	Connect()
 end
 
+function ShowDelayedStatus(status)
+	C4:UpdateProperty('Status', status)
+end
+
 function EC.WS_DISCONNECT()
 	Disconnect()
 end
 
 function Connect()
-	if Connected == true then
+	if Connected == true or Properties["Long Lived Access Token"] == "" then
 		return
 	end
 
@@ -266,6 +277,12 @@ function Connect()
 end
 
 function Disconnect()
+	if Connected then
+		C4:UpdateProperty('Status', "Disconnecting...")
+	else
+		C4:UpdateProperty('Status', "Disconnected")
+	end
+
 	ForceDisconnect = true
 	Connected = false
 
@@ -316,7 +333,12 @@ function ReceieveMessage(socket, data)
 			}
 
 			SocketSendTable(tParams)
-		elseif jsonData.type == "event" and Connected == true then
+		elseif jsonData.type == "event" then
+			if Connected == false then
+				Connected = true
+				C4:UpdateProperty('Status', "Connected")
+			end
+
 			tParams = {
 				data = data
 			}
@@ -327,11 +349,13 @@ function ReceieveMessage(socket, data)
 end
 
 function ConnectionStopped(socket, data)
+	Connected = false
+
 	print("Disconnected...")
 	C4:UpdateProperty('Status', "Disconnected")
 
 	if ConnectionAttempts < 10 and ForceDisconnect == false then
-		local waitTime = (5 * ConnectionAttempts)
+		local waitTime = (10 * ConnectionAttempts)
 		print("Retrying Connection in " .. waitTime .. "s")
 		C4:UpdateProperty('Status', "Retrying in " .. waitTime .. "s")
 		SetTimer("RetryTimer", ONE_SECOND * waitTime, Connect)
