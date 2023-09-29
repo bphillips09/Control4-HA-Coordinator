@@ -354,7 +354,7 @@ function ConnectionStopped(socket, data)
 	print("Disconnected...")
 	C4:UpdateProperty('Status', "Disconnected")
 
-	if ConnectionAttempts < 10 and ForceDisconnect == false then
+	if ConnectionAttempts < 60 and ForceDisconnect == false then
 		local waitTime = (10 * ConnectionAttempts)
 		print("Retrying Connection in " .. waitTime .. "s")
 		C4:UpdateProperty('Status', "Retrying in " .. waitTime .. "s")

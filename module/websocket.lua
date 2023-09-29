@@ -1,6 +1,6 @@
 -- Copyright 2023 Snap One, LLC. All rights reserved.
 
-COMMON_WEBSOCKET_VER = 9
+COMMON_WEBSOCKET_VER = 11
 
 require ('global.handlers')
 require ('global.timer')
@@ -457,8 +457,10 @@ function WebSocket:parseHTTPPacket ()
 		local hash = C4:Hash ('sha1', check, {['return_encoding'] = 'BASE64'})
 
 		if (headers ['SEC-WEBSOCKET-ACCEPT'] == hash and
-			headers ['UPGRADE'] == 'websocket' and
+			string.lower (headers ['UPGRADE']) == 'websocket' and
 			string.lower (headers ['CONNECTION']) == 'upgrade') then
+
+			print ('WS ' .. self.url .. ' running')
 
 			self.running = true
 			self.metrics:SetCounter ('Running')
