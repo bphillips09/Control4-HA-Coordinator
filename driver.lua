@@ -151,6 +151,7 @@ end
 
 function OnDriverInit()
 	print("--driver init--")
+    C4:AddVariable("HA URL", "", "STRING")
 end
 
 function OnDriverLateInit(DIT)
@@ -173,6 +174,8 @@ function OnDriverDestroyed()
 	if Socket ~= nil then
 		Socket:Close()
 	end
+
+    C4:DeleteVariable("HA URL")
 end
 
 function UIRequest(strCommand, tParams)
@@ -212,6 +215,7 @@ end
 
 function OPC.Home_Assistant_URL(value)
 	EC.WS_CONNECT()
+	C4:SetVariable("HA URL", tostring(value))
 end
 
 function OPC.Long_Lived_Access_Token(value)
