@@ -4,6 +4,8 @@ MessageID = 0
 Connected = false
 ConnectionAttempts = 0
 ForceDisconnect = false
+UseSSL = false
+CertificateDirectoryPrefix = "../../../../"
 
 --Globals
 EC = {}
@@ -113,8 +115,6 @@ function OnPropertyChanged(strProperty)
 end
 
 function ReceivedFromProxy(idBinding, strCommand, tParams)
-	print("--proxy command-- " .. strCommand)
-
 	strCommand = strCommand or ''
 	tParams = tParams or {}
 	local args = {}
@@ -140,8 +140,6 @@ function ReceivedFromProxy(idBinding, strCommand, tParams)
 		success, ret = pcall(RFP[idBinding], idBinding, strCommand, tParams, args)
 	end
 
-	print(success)
-
 	if (success == true) then
 		return (ret)
 	elseif (success == false) then
@@ -151,7 +149,7 @@ end
 
 function OnDriverInit()
 	print("--driver init--")
-    C4:AddVariable("HA URL", "", "STRING")
+	C4:AddVariable("HA URL", "", "STRING")
 end
 
 function OnDriverLateInit(DIT)
@@ -164,6 +162,11 @@ function OnDriverLateInit(DIT)
 	if DIT ~= "DIT_ADDING" then
 		SetTimer("WaitForConnect", 2 * ONE_MINUTE, EC.WS_CONNECT)
 	end
+
+	C4:SetPropertyAttribs("Directory Start Path", 1)
+	C4:SetPropertyAttribs("Certificate Path", 1)
+	C4:SetPropertyAttribs("Private Key Path", 1)
+	C4:SetPropertyAttribs("CA Certificate Path", 1)
 end
 
 function OnDriverDestroyed()
@@ -175,7 +178,7 @@ function OnDriverDestroyed()
 		Socket:Close()
 	end
 
-    C4:DeleteVariable("HA URL")
+	C4:DeleteVariable("HA URL")
 end
 
 function UIRequest(strCommand, tParams)
@@ -235,7 +238,44 @@ function OPC.Debug_Print(value)
 	end
 end
 
+function OPC.Use_SSL(value)
+	UseSSL = (value == "Yes")
+	local showPropertyValue = 1
+	if UseSSL then showPropertyValue = 0 end
+
+	C4:SetPropertyAttribs("Directory Start Path", showPropertyValue)
+	C4:SetPropertyAttribs("Certificate Path", showPropertyValue)
+	C4:SetPropertyAttribs("Private Key Path", showPropertyValue)
+	C4:SetPropertyAttribs("CA Certificate Path", showPropertyValue)
+
+	EC.WS_CONNECT()
+end
+
+function OPC.Directory_Start_Path(value)
+	if value == "Driver" then
+		CertificateDirectoryPrefix = "./"
+	else
+		CertificateDirectoryPrefix = "../../../../"
+	end
+
+	EC.WS_CONNECT()
+end
+
+function OPC.Certificate_Path(value)
+	EC.WS_CONNECT()
+end
+
+function OPC.Private_Key_Path(value)
+	EC.WS_CONNECT()
+end
+
+function OPC.CA_Certificate_Path(value)
+	EC.WS_CONNECT()
+end
+
 function EC.WS_CONNECT()
+	KillAllTimers()
+
 	if Connected == true then
 		Disconnect()
 		SetTimer("WaitToShowStatus", 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
@@ -253,6 +293,8 @@ function ShowDelayedStatus(status)
 end
 
 function EC.WS_DISCONNECT()
+	KillAllTimers()
+
 	Disconnect()
 end
 
@@ -261,14 +303,30 @@ function Connect()
 		return
 	end
 
-	local HAURL = Properties["Home Assistant URL"]
+	local HA_URL = Properties["Home Assistant URL"]
 
-	if HAURL == nil or HAURL == "" then
+	if HA_URL == nil or HA_URL == "" then
 		return
 	end
 
-	local url = "ws://" .. HAURL .. "/api/websocket"
-	Socket = WebSocketConnection:new(url)
+	local prefix = "ws://"
+
+	local headers = nil
+	local tParams = {}
+
+	if UseSSL then
+		prefix = "wss://"
+
+		tParams = {
+			CERTIFICATE = CertificateDirectoryPrefix .. Properties["Certificate Path"],
+			PRIVATE_KEY = CertificateDirectoryPrefix .. Properties["Private Key Path"],
+			CACERTFILE = CertificateDirectoryPrefix .. Properties["CA Certificate Path"]
+		}
+	end
+
+	local url = prefix .. HA_URL .. "/api/websocket"
+
+	Socket = WebSocketConnection:new(url, headers, tParams)
 	if Socket ~= nil then
 		print("Connecting...")
 		C4:UpdateProperty('Status', "Connecting...")

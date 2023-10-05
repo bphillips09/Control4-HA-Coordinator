@@ -5,7 +5,7 @@
   <name>HA Coordinator</name>
   <model>HA Coordinator</model>
   <created>09/10/2023 12:00</created>
-  <modified>10/02/2023 12:00</modified>
+  <modified>10/05/2023 12:00</modified>
   <version>102</version>
   <control>lua_gen</control>
   <auto_update>true</auto_update>
@@ -66,6 +66,44 @@
       </property>
       <property>
         <name>Long Lived Access Token</name>
+        <type>STRING</type>
+        <readonly>false</readonly>
+        <default></default>
+      </property>
+      <property>
+        <name>Use SSL</name>
+        <type>LIST</type>
+        <readonly>false</readonly>
+        <default>No</default>
+        <items>
+          <item>No</item>
+          <item>Yes</item>
+        </items>
+      </property>
+      <property>
+        <name>Directory Start Path</name>
+        <type>LIST</type>
+        <readonly>false</readonly>
+        <default>Root</default>
+        <items>
+          <item>Root</item>
+          <item>Driver</item>
+        </items>
+      </property>
+      <property>
+        <name>Certificate Path</name>
+        <type>STRING</type>
+        <readonly>false</readonly>
+        <default></default>
+      </property>
+      <property>
+        <name>Private Key Path</name>
+        <type>STRING</type>
+        <readonly>false</readonly>
+        <default></default>
+      </property>
+      <property>
+        <name>CA Certificate Path</name>
         <type>STRING</type>
         <readonly>false</readonly>
         <default></default>
