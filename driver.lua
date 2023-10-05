@@ -274,12 +274,10 @@ function OPC.CA_Certificate_Path(value)
 end
 
 function EC.WS_CONNECT()
-	KillAllTimers()
-
 	if Connected == true then
 		Disconnect()
 		SetTimer("WaitToShowStatus", 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
-		SetTimer("WaitForConnect", 10 * ONE_SECOND, EC.WS_CONNECT)
+		SetTimer("WaitForConnect", 10 * ONE_SECOND, Connect)
 		return
 	end
 
