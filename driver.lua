@@ -174,6 +174,8 @@ function OnDriverDestroyed()
 
 	Connected = false
 
+	C4:FireEvent ('Home Assistant Disconnected')
+
 	if Socket ~= nil then
 		Socket:Close()
 	end
@@ -277,7 +279,7 @@ function EC.WS_CONNECT()
 	if Connected == true then
 		Disconnect()
 		SetTimer("WaitToShowStatus", 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
-		SetTimer("WaitForConnect", 10 * ONE_SECOND, Connect)
+		SetTimer("WaitForConnect", 10 * ONE_SECOND, EC.WS_CONNECT)
 		return
 	end
 
@@ -291,8 +293,6 @@ function ShowDelayedStatus(status)
 end
 
 function EC.WS_DISCONNECT()
-	KillAllTimers()
-
 	Disconnect()
 end
 
@@ -346,6 +346,8 @@ function Disconnect()
 	ForceDisconnect = true
 	Connected = false
 
+	C4:FireEvent ('Home Assistant Disconnected')
+
 	if Socket ~= nil then
 		Socket:Close()
 	end
@@ -387,6 +389,8 @@ function ReceieveMessage(socket, data)
 			C4:UpdateProperty('Status', "Connected")
 			C4:UpdateProperty('HA Version', jsonData.ha_version)
 
+			C4:FireEvent ('Home Assistant Connected')
+
 			tParams = {
 				type = "subscribe_events",
 				event_type = "state_changed"
@@ -397,6 +401,8 @@ function ReceieveMessage(socket, data)
 			if Connected == false then
 				Connected = true
 				C4:UpdateProperty('Status', "Connected")
+			
+				C4:FireEvent ('Home Assistant Connected')
 			end
 
 			tParams = {
@@ -412,6 +418,7 @@ function ConnectionStopped(socket, data)
 	Connected = false
 
 	print("Disconnected...")
+	C4:FireEvent ('Home Assistant Disconnected')
 	C4:UpdateProperty('Status', "Disconnected")
 
 	if ConnectionAttempts < 60 and ForceDisconnect == false then

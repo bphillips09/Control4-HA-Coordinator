@@ -43,7 +43,18 @@
     </connection>
   </connections>
   <conditionals />
-  <events />
+  <events>
+		<event>
+			<id>1</id>
+			<name>Home Assistant Connected</name>
+			<description>The connection to HA was established</description>
+		</event>
+    <event>
+			<id>2</id>
+			<name>Home Assistant Disconnected</name>
+			<description>The connection to HA was lost</description>
+		</event>
+	</events>
   <config>
     <script file="driver.lua" jit="1"></script>
     <actions>
