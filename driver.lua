@@ -174,7 +174,7 @@ function OnDriverDestroyed()
 
 	Connected = false
 
-	C4:FireEvent ('Home Assistant Disconnected')
+	C4:FireEvent('Home Assistant Disconnected')
 
 	if Socket ~= nil then
 		Socket:Close()
@@ -333,6 +333,20 @@ function Connect()
 		Socket:SetClosedByRemoteFunction(ConnectionStopped)
 		Socket:SetOfflineFunction(ConnectionStopped)
 		Socket:Start()
+		SetTimer('AuthTimer', ONE_SECOND * 5, AutoAuth)
+	end
+end
+
+function AutoAuth()
+	if not Connected then
+		print("Trying Auto Auth...")
+
+		local tParams = {
+			type = "auth",
+			access_token = Properties["Long Lived Access Token"]
+		}
+
+		SocketSendTable(tParams)
 	end
 end
 
@@ -346,7 +360,7 @@ function Disconnect()
 	ForceDisconnect = true
 	Connected = false
 
-	C4:FireEvent ('Home Assistant Disconnected')
+	C4:FireEvent('Home Assistant Disconnected')
 
 	if Socket ~= nil then
 		Socket:Close()
@@ -386,10 +400,11 @@ function ReceieveMessage(socket, data)
 		elseif jsonData.type == "auth_ok" then
 			Connected = true
 
+			print("Connected!")
 			C4:UpdateProperty('Status', "Connected")
 			C4:UpdateProperty('HA Version', jsonData.ha_version)
 
-			C4:FireEvent ('Home Assistant Connected')
+			C4:FireEvent('Home Assistant Connected')
 
 			tParams = {
 				type = "subscribe_events",
@@ -400,9 +415,10 @@ function ReceieveMessage(socket, data)
 		elseif jsonData.type == "event" then
 			if Connected == false then
 				Connected = true
+				print("Connected!")
 				C4:UpdateProperty('Status', "Connected")
-			
-				C4:FireEvent ('Home Assistant Connected')
+
+				C4:FireEvent('Home Assistant Connected')
 			end
 
 			tParams = {
@@ -418,7 +434,7 @@ function ConnectionStopped(socket, data)
 	Connected = false
 
 	print("Disconnected...")
-	C4:FireEvent ('Home Assistant Disconnected')
+	C4:FireEvent('Home Assistant Disconnected')
 	C4:UpdateProperty('Status', "Disconnected")
 
 	if ConnectionAttempts < 60 and ForceDisconnect == false then
