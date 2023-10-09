@@ -5,8 +5,8 @@
   <name>HA Coordinator</name>
   <model>HA Coordinator</model>
   <created>09/10/2023 12:00</created>
-  <modified>10/05/2023 12:00</modified>
-  <version>102</version>
+  <modified>10/08/2023 12:00</modified>
+  <version>103</version>
   <control>lua_gen</control>
   <auto_update>true</auto_update>
   <force_auto_update>false</force_auto_update>
