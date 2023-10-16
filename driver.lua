@@ -2,7 +2,6 @@ WebSocketConnection = require("module.websocket")
 Socket = nil
 MessageID = 0
 Connected = false
-ConnectionAttempts = 0
 ForceDisconnect = false
 UseSSL = false
 CertificateDirectoryPrefix = "../../../../"
@@ -160,7 +159,7 @@ function OnDriverLateInit(DIT)
 	end
 
 	if DIT ~= "DIT_ADDING" then
-		SetTimer("WaitForConnect", 2 * ONE_MINUTE, EC.WS_CONNECT)
+		SetTimer('WaitForConnectAdd', 2 * ONE_MINUTE, EC.WS_CONNECT)
 	end
 
 	C4:SetPropertyAttribs("Directory Start Path", 1)
@@ -278,12 +277,13 @@ end
 function EC.WS_CONNECT()
 	if Connected == true then
 		Disconnect()
-		SetTimer("WaitToShowStatus", 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
-		SetTimer("WaitForConnect", 10 * ONE_SECOND, EC.WS_CONNECT)
+		SetTimer('WaitToShowStatus', 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
+		SetTimer('WaitForConnect', 10 * ONE_SECOND, EC.WS_CONNECT)
 		return
 	end
 
-	ConnectionAttempts = 0
+	CancelTimer('WatchdogTimer')
+	SetTimer('WatchdogTimer', ONE_SECOND * 30, Connect)
 
 	Connect()
 end
@@ -293,6 +293,12 @@ function ShowDelayedStatus(status)
 end
 
 function EC.WS_DISCONNECT()
+	CancelTimer('WaitToShowStatus')
+	CancelTimer('WaitForConnect')
+	CancelTimer('WaitForConnectAdd')
+	CancelTimer('AuthTimer')
+	CancelTimer('WatchdogTimer')
+
 	Disconnect()
 end
 
@@ -328,7 +334,6 @@ function Connect()
 	if Socket ~= nil then
 		print("Connecting...")
 		C4:UpdateProperty('Status', "Connecting...")
-		ConnectionAttempts = ConnectionAttempts + 1
 		Socket:SetProcessMessageFunction(ReceieveMessage)
 		Socket:SetClosedByRemoteFunction(ConnectionStopped)
 		Socket:SetOfflineFunction(ConnectionStopped)
@@ -437,11 +442,8 @@ function ConnectionStopped(socket, data)
 	C4:FireEvent('Home Assistant Disconnected')
 	C4:UpdateProperty('Status', "Disconnected")
 
-	if ConnectionAttempts < 60 and ForceDisconnect == false then
-		local waitTime = (10 * ConnectionAttempts)
-		print("Retrying Connection in " .. waitTime .. "s")
-		C4:UpdateProperty('Status', "Retrying in " .. waitTime .. "s")
-		SetTimer("RetryTimer", ONE_SECOND * waitTime, Connect)
+	if ForceDisconnect == false then
+		C4:UpdateProperty('Status', "Waiting to retry connection...")
 	end
 
 	if ForceDisconnect == true then
