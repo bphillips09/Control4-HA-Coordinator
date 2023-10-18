@@ -282,9 +282,12 @@ function EC.WS_CONNECT()
 		return
 	end
 
-	CancelTimer('WatchdogTimer')
-	SetTimer('WatchdogTimer', ONE_SECOND * 30, Connect)
+	Watchdog()
+end
 
+function Watchdog()
+	CancelTimer('WatchdogTimer')
+	SetTimer('WatchdogTimer', ONE_SECOND * 30, Watchdog)
 	Connect()
 end
 
