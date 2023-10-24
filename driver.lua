@@ -5,8 +5,9 @@ Connected = false
 ForceDisconnect = false
 UseSSL = false
 CertificateDirectoryPrefix = "../../../../"
+WrittenDriverCount = 0
+EntityTable = {}
 
---Globals
 EC = {}
 OPC = {}
 RFP = {}
@@ -182,6 +183,60 @@ function OnDriverDestroyed()
 	C4:DeleteVariable("HA URL")
 end
 
+function OnBindingChanged(idBinding, strClass, bIsBound)
+	if idBinding == 1 or idBinding == 6001 then
+		UpdateEntityIDs(true)
+	end
+end
+
+function UpdateEntityIDs(reconnect)
+	EntityTable = {}
+
+	local consumerDevices = C4:GetBoundConsumerDevices(0, 1)
+
+	local stringTable = {}
+	for deviceId, _ in pairs(consumerDevices) do
+		table.insert(stringTable, deviceId)
+	end
+
+	local deviceIdsString = table.concat(stringTable, ",")
+	local devicesFilter = { DeviceIds = deviceIdsString }
+	local getDevicesResult = C4:GetDevices(devicesFilter)
+
+	for deviceId, driverInfo in pairs(getDevicesResult) do
+		local driverFileName = driverInfo.driverFileName
+
+		if (string.find(driverFileName, "HA")) then
+			for _, var in pairs(C4:GetDeviceVariables(tonumber(deviceId))) do
+				print("Query Driver: " .. driverFileName)
+
+				local strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES_SYNC", {}, true)
+
+				if (not strValues) then
+					strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES", {}, true)
+				end
+
+				for property in string.gmatch(strValues, "<property>(.-)</property>") do
+					local name = XMLCapture(property, "name")
+					if name == "Entity ID" then
+						local value = XMLCapture(property, "value")
+						EntityTable[value] = deviceId
+						print("-- Add entity to EntityTable: " .. value .. " --")
+					end
+				end
+
+				--if (var.name == "ENTITY_ID") then
+				--	table.insert(EntityTable, var.value)
+				--end
+			end
+		end
+	end
+
+	if reconnect then
+		EC.WS_CONNECT()
+	end
+end
+
 function UIRequest(strCommand, tParams)
 	local success, ret
 
@@ -274,7 +329,90 @@ function OPC.CA_Certificate_Path(value)
 	EC.WS_CONNECT()
 end
 
+function EC.PRINT_ENTITY_TABLE()
+	for k,_ in pairs(EntityTable) do
+		print("-- Entity: " .. k .. " --")
+	end
+end
+
+function EC.UPDATE_CONNECTED_DRIVERS()
+	local totalDrivers = 0
+	local downloadedDrivers = {}
+	WrittenDriverCount = 0
+
+	local consumerDevices = C4:GetBoundConsumerDevices(0, 1)
+
+	local stringTable = {}
+	for deviceId, _ in pairs(consumerDevices) do
+		table.insert(stringTable, deviceId)
+	end
+
+	local deviceIdsString = table.concat(stringTable, ",")
+	local devicesFilter = { DeviceIds = deviceIdsString }
+	local getDevicesResult = C4:GetDevices(devicesFilter)
+
+	for deviceId, driverInfo in pairs(getDevicesResult) do
+		local driverFileName = driverInfo.driverFileName
+
+		if (string.find(driverFileName, "HA")) then
+			if (downloadedDrivers[driverFileName] == nil) then
+				totalDrivers = totalDrivers + 1
+				print("driver " .. totalDrivers .. ": " .. driverFileName)
+				downloadedDrivers[driverFileName] = deviceId
+			end
+		end
+	end
+
+	for driverFileName, deviceId in pairs(downloadedDrivers) do
+		local repoName = driverFileName:match("^(.-)%.c4z"):gsub(" ", "-")
+		local modifiedName = driverFileName:gsub(" ", ".")
+		local baseURL = "https://github.com/bphillips09/Control4-" .. repoName
+		local suffixURL = "/releases/latest/download/" .. modifiedName
+		local finalURL = baseURL .. suffixURL
+
+		print("Downloading " .. finalURL)
+
+		local result =
+			function(driverBody, finalDriver)
+				if driverBody == nil or driverBody == "" then
+					print("-- Driver Download Error for driver: " .. driverFileName .. " --")
+
+					downloadedDrivers[driverFileName] = nil
+
+					WrittenDriverCount = WrittenDriverCount + 1
+				else
+					print("-- Downloaded Driver: " .. driverFileName .. " --")
+
+					local dir = C4:GetC4zDir()
+
+					local fileWriter = io.open(dir .. driverFileName, "w")
+
+					if fileWriter ~= nil and fileWriter ~= -1 then
+						fileWriter:write(driverBody)
+						fileWriter:close()
+
+						print("-- Wrote driver successfully: " .. driverFileName .. " --")
+
+						WrittenDriverCount = WrittenDriverCount + 1
+
+						print("Wrote " .. WrittenDriverCount .. " of " .. totalDrivers)
+
+						if WrittenDriverCount == totalDrivers then
+							InstallDrivers(downloadedDrivers)
+						end
+					end
+				end
+			end
+
+		GetFile(finalURL, result)
+	end
+end
+
 function EC.WS_CONNECT()
+	UpdateEntityIDs(false)
+
+	Sleep(1)
+
 	if Connected == true then
 		Disconnect()
 		SetTimer('WaitToShowStatus', 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
@@ -383,6 +521,18 @@ end
 
 function RFP.HA_GET_STATE(idBinding, strCommand, tParams)
 	CallHomeAssistantAPI("states/" .. tParams.entity)
+
+	EntityTable[tParams.entity] = ""
+
+	local params = {
+		type = "subscribe_trigger",
+		trigger = {
+			platform = "state",
+			entity_id = tParams.entity
+		}
+	}
+
+	SocketSendTable(params)
 end
 
 function ReceieveMessage(socket, data)
@@ -414,9 +564,17 @@ function ReceieveMessage(socket, data)
 
 			C4:FireEvent('Home Assistant Connected')
 
+			local entityArray = {}
+			for key in pairs(EntityTable) do
+				table.insert(entityArray, key)
+			end
+
 			tParams = {
-				type = "subscribe_events",
-				event_type = "state_changed"
+				type = "subscribe_trigger",
+				trigger = {
+					platform = "state",
+					entity_id = entityArray
+				}
 			}
 
 			SocketSendTable(tParams)
@@ -427,6 +585,18 @@ function ReceieveMessage(socket, data)
 				C4:UpdateProperty('Status', "Connected")
 
 				C4:FireEvent('Home Assistant Connected')
+			end
+
+			if jsonData.event ~= nil and jsonData.event.data == nil and jsonData.event.variables ~= nil then
+				local newData = {
+					event = {
+						data = {
+							new_state = jsonData["event"]["variables"]["trigger"]["to_state"]
+						}
+					}
+				}
+
+				data = JSON:encode(newData)
 			end
 
 			tParams = {
@@ -489,4 +659,70 @@ function CallHomeAssistantAPI(endpoint)
 			["connect_timeout"] = 10
 		})
 		:Get(endUrl, headers)
+end
+
+function GetFile(url, callback)
+	local t = C4:url()
+		:OnDone(
+			function(transfer, responses, errCode, errMsg)
+				if (errCode == 0) then
+					local lresp = responses[#responses]
+
+					if lresp.code == 200 then
+						if callback then
+							callback(lresp.body)
+						end
+					else
+						print("Invalid response: " .. lresp.code)
+						if callback then
+							callback("")
+						end
+					end
+				else
+					if callback then
+						callback("")
+					end
+					if (errCode == -1) then
+						print("Transfer aborted")
+					else
+						print("Transfer failed with error " ..
+							errCode .. ": " .. errMsg .. " (" .. #responses .. " responses completed)")
+					end
+				end
+			end)
+		:SetOptions({
+			["fail_on_error"] = false,
+			["timeout"] = 15,
+			["connect_timeout"] = 10
+		})
+		:Get(url)
+end
+
+function InstallDrivers(driverList)
+	for driverFilename, _ in pairs(driverList) do
+		C4:CreateTCPClient()
+			:OnConnect(function(client)
+				print("-- Request update driver on director: " .. driverFilename .. " --")
+
+				local c4soap =
+					'<c4soap name="UpdateProjectC4i" session="0" operation="RWX" category="composer" async="False"><param name="name" type="string">' ..
+					driverFilename .. '</param></c4soap>' .. string.char(0)
+				client:Write(c4soap)
+				client:Close()
+			end)
+			:OnError(function(client, errCode, errMsg)
+				client:Close()
+				print("-- Error Instructing Director: " .. errCode .. ": " .. errMsg .. " --")
+			end)
+			:Connect("127.0.0.1", 5020)
+
+		Sleep(0.5)
+	end
+end
+
+function Sleep(a)
+	local sec = tonumber(os.clock() + a)
+
+	while (os.clock() < sec) do
+	end
 end
