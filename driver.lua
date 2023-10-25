@@ -155,12 +155,8 @@ end
 function OnDriverLateInit(DIT)
 	print("--late init--")
 
-	for property, _ in pairs(Properties) do
-		OnPropertyChanged(property)
-	end
-
 	if DIT ~= "DIT_ADDING" then
-		SetTimer('WaitForConnectAdd', 2 * ONE_MINUTE, EC.WS_CONNECT)
+		SetTimer('WaitForConnectAdd', 2 * ONE_SECOND, EC.WS_CONNECT())
 	end
 
 	C4:SetPropertyAttribs("Directory Start Path", 1)
@@ -184,7 +180,8 @@ function OnDriverDestroyed()
 end
 
 function OnBindingChanged(idBinding, strClass, bIsBound)
-	if idBinding == 1 or idBinding == 6001 then
+	if idBinding == 1 or idBinding == 6001 and bIsBound == true then
+		print("BINDING CHANGED: " .. tostring(idBinding))
 		UpdateEntityIDs(true)
 	end
 end
@@ -232,7 +229,7 @@ function UpdateEntityIDs(reconnect)
 		end
 	end
 
-	if reconnect then
+	if reconnect == true then
 		EC.WS_CONNECT()
 	end
 end
@@ -330,7 +327,8 @@ function OPC.CA_Certificate_Path(value)
 end
 
 function EC.PRINT_ENTITY_TABLE()
-	for k,_ in pairs(EntityTable) do
+	print("-- EntityTable --")
+	for k, _ in pairs(EntityTable) do
 		print("-- Entity: " .. k .. " --")
 	end
 end
@@ -357,7 +355,6 @@ function EC.UPDATE_CONNECTED_DRIVERS()
 		if (string.find(driverFileName, "HA")) then
 			if (downloadedDrivers[driverFileName] == nil) then
 				totalDrivers = totalDrivers + 1
-				print("driver " .. totalDrivers .. ": " .. driverFileName)
 				downloadedDrivers[driverFileName] = deviceId
 			end
 		end
@@ -369,8 +366,6 @@ function EC.UPDATE_CONNECTED_DRIVERS()
 		local baseURL = "https://github.com/bphillips09/Control4-" .. repoName
 		local suffixURL = "/releases/latest/download/" .. modifiedName
 		local finalURL = baseURL .. suffixURL
-
-		print("Downloading " .. finalURL)
 
 		local result =
 			function(driverBody, finalDriver)
@@ -416,7 +411,7 @@ function EC.WS_CONNECT()
 	if Connected == true then
 		Disconnect()
 		SetTimer('WaitToShowStatus', 2 * ONE_SECOND, ShowDelayedStatus("Reconnecting..."))
-		SetTimer('WaitForConnect', 10 * ONE_SECOND, EC.WS_CONNECT)
+		SetTimer('WaitForConnect', 10 * ONE_SECOND, Connect())
 		return
 	end
 
@@ -522,17 +517,19 @@ end
 function RFP.HA_GET_STATE(idBinding, strCommand, tParams)
 	CallHomeAssistantAPI("states/" .. tParams.entity)
 
-	EntityTable[tParams.entity] = ""
-
-	local params = {
-		type = "subscribe_trigger",
-		trigger = {
-			platform = "state",
-			entity_id = tParams.entity
+	if EntityTable[tParams.entity] == nil then
+		local params = {
+			type = "subscribe_trigger",
+			trigger = {
+				platform = "state",
+				entity_id = tParams.entity
+			}
 		}
-	}
 
-	SocketSendTable(params)
+		SocketSendTable(params)
+	end
+
+	EntityTable[tParams.entity] = ""
 end
 
 function ReceieveMessage(socket, data)
