@@ -67,10 +67,6 @@
         <command>WS_DISCONNECT</command>
       </action>
       <action>
-        <name>Update Connected Drivers</name>
-        <command>UPDATE_CONNECTED_DRIVERS</command>
-      </action>
-      <action>
         <name>Print Entity Table</name>
         <command>PRINT_ENTITY_TABLE</command>
       </action>
