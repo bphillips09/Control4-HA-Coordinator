@@ -200,34 +200,30 @@ function UpdateEntityIDs(reconnect)
 	local devicesFilter = { DeviceIds = deviceIdsString }
 	local getDevicesResult = C4:GetDevices(devicesFilter)
 
+	local debugString = "\n"
+
 	for deviceId, driverInfo in pairs(getDevicesResult) do
 		local driverFileName = driverInfo.driverFileName
 
-		if (string.find(driverFileName, "HA")) then
-			for _, var in pairs(C4:GetDeviceVariables(tonumber(deviceId))) do
-				print("Query Driver: " .. driverFileName)
+		debugString = debugString .. ("Query Connected Driver: " .. driverFileName) .. "\n"
 
-				local strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES_SYNC", {}, true)
+		local strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES_SYNC", {}, true)
 
-				if (not strValues) then
-					strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES", {}, true)
-				end
+		if (not strValues) then
+			strValues = C4:SendUIRequest(deviceId, "GET_PROPERTIES", {}, true)
+		end
 
-				for property in string.gmatch(strValues, "<property>(.-)</property>") do
-					local name = XMLCapture(property, "name")
-					if name == "Entity ID" then
-						local value = XMLCapture(property, "value")
-						EntityTable[value] = deviceId
-						print("-- Add entity to EntityTable: " .. value .. " --")
-					end
-				end
-
-				--if (var.name == "ENTITY_ID") then
-				--	table.insert(EntityTable, var.value)
-				--end
+		for property in string.gmatch(strValues, "<property>(.-)</property>") do
+			local name = XMLCapture(property, "name")
+			if name == "Entity ID" then
+				local value = XMLCapture(property, "value")
+				EntityTable[value] = deviceId
+				debugString = debugString .. ("-- Add entity to EntityTable: " .. value .. " --\n")
 			end
 		end
 	end
+
+	print(debugString)
 
 	if reconnect == true then
 		EC.WS_CONNECT()
@@ -327,6 +323,9 @@ function OPC.CA_Certificate_Path(value)
 end
 
 function EC.PRINT_ENTITY_TABLE()
+	print("-- Force Update Entities --")
+	UpdateEntityIDs(false)
+
 	print("-- EntityTable --")
 	for k, _ in pairs(EntityTable) do
 		print("-- Entity: " .. k .. " --")
