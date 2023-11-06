@@ -191,6 +191,14 @@ function UpdateEntityIDs(reconnect)
 
 	local consumerDevices = C4:GetBoundConsumerDevices(0, 1)
 
+	if consumerDevices == nil then
+		if reconnect == true then
+			EC.WS_CONNECT()
+		end
+
+		return
+	end
+
 	local stringTable = {}
 	for deviceId, _ in pairs(consumerDevices) do
 		table.insert(stringTable, deviceId)
