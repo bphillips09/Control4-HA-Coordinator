@@ -163,6 +163,9 @@ function OnDriverLateInit(DIT)
 	C4:SetPropertyAttribs("Certificate Path", 1)
 	C4:SetPropertyAttribs("Private Key Path", 1)
 	C4:SetPropertyAttribs("CA Certificate Path", 1)
+
+	local version = C4:GetDriverConfigInfo('version')
+	C4:UpdateProperty('Driver Version', version)
 end
 
 function OnDriverDestroyed()
