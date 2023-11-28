@@ -178,8 +178,6 @@ function OnDriverDestroyed()
 	if Socket ~= nil then
 		Socket:Close()
 	end
-
-	C4:DeleteVariable("HA URL")
 end
 
 function OnBindingChanged(idBinding, strClass, bIsBound)
