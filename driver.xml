@@ -13,6 +13,7 @@
   <minimum_auto_update_version>1</minimum_auto_update_version>
   <controlmethod>ip</controlmethod>
   <combo>true</combo>
+  <agent>true</agent>
   <proxy>HA WS</proxy>
   <driver>DriverWorks</driver>
   <minimum_os_version>3.0.0</minimum_os_version>
