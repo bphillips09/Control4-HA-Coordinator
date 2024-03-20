@@ -518,7 +518,15 @@ end
 
 function EC.Call_Service(tParams)
 	local splitTable = Split(tParams["Service"], ".")
-	local data = JSON:decode(tParams["Data"]) or {}
+	local dataString = tParams["Data"]
+
+	local variables = {
+		VAR1 = tParams["${VAR1}"] or "",
+		VAR2 = tParams["${VAR2}"] or "",
+		VAR3 = tParams["${VAR3}"] or ""
+	}
+
+	local data = JSON:decode(InterpolateString(dataString, variables)) or {}
 
 	if data == "" then
 		data = {}
@@ -762,4 +770,20 @@ function Split(inputstr, sep)
 		table.insert(t, field)
 		if s == "" then return t end
 	end
+end
+
+function InterpolateString(str, variables)
+	local function replaceVariable(s)
+		local valid_variable = variables[s]
+		if valid_variable == nil then
+			return s
+		else
+			local variable_ids = Split(valid_variable, ",")
+			return C4:GetVariable(variable_ids[1], variable_ids[2])
+		end
+	end
+
+	local result = str:gsub("%${(%w+)}", replaceVariable)
+
+	return result
 end
