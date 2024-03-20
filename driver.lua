@@ -516,6 +516,29 @@ function Disconnect()
 	end
 end
 
+function EC.Call_Service(tParams)
+	local splitTable = Split(tParams["Service"], ".")
+	local data = JSON:decode(tParams["Data"]) or {}
+
+	if data == "" then
+		data = {}
+	end
+
+	local serviceCall = {
+		type = "call_service",
+		domain = splitTable[1],
+		service = splitTable[2],
+
+		service_data = data,
+
+		target = {
+			entity_id = tParams["Entity ID"]
+		}
+	}
+
+	SocketSendTable(serviceCall)
+end
+
 function RFP.HA_CALL_SERVICE(idBinding, strCommand, tParams)
 	tParams = JSON:decode(tParams.JSON)
 	tParams["type"] = "call_service"
@@ -729,5 +752,14 @@ function Sleep(a)
 	local sec = tonumber(os.clock() + a)
 
 	while (os.clock() < sec) do
+	end
+end
+
+function Split(inputstr, sep)
+	sep = sep or '%s'
+	local t = {}
+	for field, s in string.gmatch(inputstr, "([^" .. sep .. "]*)(" .. sep .. "?)") do
+		table.insert(t, field)
+		if s == "" then return t end
 	end
 end

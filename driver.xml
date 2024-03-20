@@ -5,8 +5,8 @@
   <name>HA Coordinator</name>
   <model>HA Coordinator</model>
   <created>09/10/2023 12:00</created>
-  <modified>03/04/2024 12:00</modified>
-  <version>109</version>
+  <modified>03/20/2024 12:00</modified>
+  <version>110</version>
   <control>lua_gen</control>
   <auto_update>true</auto_update>
   <force_auto_update>false</force_auto_update>
@@ -72,7 +72,26 @@
         <command>PRINT_ENTITY_TABLE</command>
       </action>
     </actions>
-    <commands></commands>
+    <commands>
+      <command>
+        <name>Call Service</name>
+        <description>Call Service PARAM1 PARAM3 on PARAM2</description>
+        <params>
+          <param>
+            <name>Service</name>
+            <type>STRING</type>
+          </param>
+          <param>
+            <name>Entity ID</name>
+            <type>STRING</type>
+          </param>
+          <param>
+            <name>Data</name>
+            <type>STRING</type>
+          </param>
+        </params>
+      </command>
+    </commands>
     <properties>
       <property>
         <name>Home Assistant URL</name>
