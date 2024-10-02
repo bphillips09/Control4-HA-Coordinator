@@ -166,6 +166,8 @@ function OnDriverLateInit(DIT)
 
 	local version = C4:GetDriverConfigInfo('version')
 	C4:UpdateProperty('Driver Version', version)
+
+	OPC.Use_SSL(Properties["Use SSL"])
 end
 
 function OnDriverDestroyed()
@@ -181,9 +183,13 @@ function OnDriverDestroyed()
 end
 
 function OnBindingChanged(idBinding, strClass, bIsBound)
-	if idBinding == 1 or idBinding == 6001 and bIsBound == true then
+	if idBinding == 1 or idBinding == 6001 then
 		print("BINDING CHANGED: " .. tostring(idBinding))
-		UpdateEntityIDs(true)
+		if bIsBound == true then
+			UpdateEntityIDs(false)
+		else
+			UpdateEntityIDs(true)
+		end
 	end
 end
 

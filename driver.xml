@@ -5,15 +5,15 @@
   <name>HA Coordinator</name>
   <model>HA Coordinator</model>
   <created>09/10/2023 12:00</created>
-  <modified>03/20/2024 12:00</modified>
-  <version>111</version>
+  <modified>10/02/2024 12:00</modified>
+  <version>113</version>
   <control>lua_gen</control>
   <auto_update>true</auto_update>
   <force_auto_update>false</force_auto_update>
   <minimum_auto_update_version>1</minimum_auto_update_version>
   <controlmethod>ip</controlmethod>
   <combo>true</combo>
-  <agent>true</agent>
+  <agent>false</agent>
   <proxy>HA WS</proxy>
   <driver>DriverWorks</driver>
   <minimum_os_version>3.0.0</minimum_os_version>
