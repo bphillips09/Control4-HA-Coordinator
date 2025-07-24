@@ -543,12 +543,14 @@ function EC.Call_Service(tParams)
 		domain = splitTable[1],
 		service = splitTable[2],
 
-		service_data = data,
+		service_data = data
+	}
 
-		target = {
+	if tParams["Entity ID"] and tParams["Entity ID"] ~= "" then
+		serviceCall.target = {
 			entity_id = tParams["Entity ID"]
 		}
-	}
+	end
 
 	SocketSendTable(serviceCall)
 end

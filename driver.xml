@@ -5,7 +5,7 @@
   <name>HA Coordinator</name>
   <model>HA Coordinator</model>
   <created>09/10/2023 12:00</created>
-  <modified>10/02/2024 12:00</modified>
+  <modified>07/24/2025 12:00</modified>
   <version>113</version>
   <control>lua_gen</control>
   <auto_update>true</auto_update>
